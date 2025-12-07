@@ -1,0 +1,278 @@
+:root {
+    --font-heading: 'Outfit', sans-serif;
+    --font-body: 'Inter', sans-serif;
+    --primary: #3b82f6;      
+    --dark-bg: #0f172a;      
+    --transition-speed: 0.5s;
+    --transition-ease: cubic-bezier(0.16, 1, 0.3, 1); /* Efek 'Pop' halus */
+}
+
+body, html {
+    height: 100%; 
+    margin: 0; 
+    overflow: hidden;
+    font-family: var(--font-body); 
+    background-color: var(--dark-bg); 
+    color: white;
+}
+
+#app-container { 
+    position: relative; 
+    width: 100%; 
+    height: 100%; 
+    overflow: hidden; 
+}
+
+/* =========================================
+   LANDING VIEW
+   ========================================= */
+#landing-view {
+    position: absolute; 
+    top: 0; left: 0; 
+    width: 100%; height: 100%;
+    /* Pastikan path gambar relatif terhadap file CSS atau root, biasanya ../img jika CSS di folder sub */
+    background: url('../img/index.jpg') no-repeat center center;
+    background-size: cover; 
+    z-index: 1;
+    transition: filter var(--transition-speed) ease, transform var(--transition-speed) ease;
+}
+
+.landing-overlay {
+    position: absolute; 
+    top: 0; left: 0; right: 0; bottom: 0;
+    background: linear-gradient(to right, rgba(15, 23, 42, 0.95) 0%, rgba(15, 23, 42, 0.5) 50%, rgba(15, 23, 42, 0.1) 100%);
+    display: flex; 
+    flex-direction: column; 
+    justify-content: space-between; 
+    padding: 40px;
+}
+
+/* Typography */
+.brand-logo { 
+    font-family: var(--font-heading); 
+    font-weight: 800; 
+    font-size: 1.8rem; 
+    text-transform: uppercase; 
+}
+
+.display-text { 
+    font-family: var(--font-heading); 
+    font-size: 4.5rem; 
+    font-weight: 800; 
+    line-height: 1.1; 
+    margin-bottom: 20px; 
+    opacity: 0; 
+    animation: slideIn 1s ease-out forwards; 
+}
+
+.sub-text { 
+    font-size: 1.1rem; 
+    font-weight: 300; 
+    color: rgba(255,255,255,0.8); 
+    border-left: 3px solid var(--primary); 
+    padding-left: 20px; 
+    margin-bottom: 30px; 
+    opacity: 0; 
+    animation: slideIn 1s ease-out 0.3s forwards; 
+}
+
+/* Buttons */
+.btn-modern {
+    padding: 15px 40px; 
+    border-radius: 50px; 
+    background: white; 
+    color: var(--dark-bg);
+    font-weight: 700; 
+    text-decoration: none; 
+    display: inline-flex; 
+    align-items: center; 
+    gap: 10px;
+    cursor: pointer; 
+    transition: 0.3s; 
+    opacity: 0; 
+    animation: slideIn 1s ease-out 0.6s forwards;
+}
+
+.btn-modern:hover { 
+    background: var(--primary); 
+    color: white; 
+    transform: translateX(10px); 
+    box-shadow: 0 0 20px rgba(59, 130, 246, 0.5); 
+}
+
+.bottom-bar { 
+    border-top: 1px solid rgba(255,255,255,0.1); 
+    padding-top: 20px; 
+    display: flex; 
+    justify-content: space-between; 
+    color: rgba(255,255,255,0.5); 
+    font-size: 0.8rem; 
+}
+
+@keyframes slideIn { 
+    from { opacity: 0; transform: translateX(-30px); } 
+    to { opacity: 1; transform: translateX(0); } 
+}
+
+/* =========================================
+   LOGIN MODAL (CENTERED GLASS)
+   ========================================= */
+.login-wrapper {
+    position: fixed;
+    top: 0; left: 0; 
+    width: 100%; height: 100%;
+    z-index: 999;
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    pointer-events: none; /* Klik tembus saat hidden */
+}
+
+.login-card {
+    width: 100%;
+    max-width: 450px; 
+    padding: 40px;
+    
+    /* Glassmorphism */
+    background: rgba(15, 23, 42, 0.75); 
+    -webkit-backdrop-filter: blur(20px);
+    backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.1);
+    border-radius: 24px;
+    box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+    
+    /* Animasi Masuk */
+    opacity: 0;
+    transform: scale(0.9) translateY(20px); 
+    transition: all var(--transition-speed) var(--transition-ease);
+}
+
+/* Logic Animasi */
+.show-login .login-wrapper {
+    pointer-events: auto; 
+}
+
+.show-login .login-card {
+    opacity: 1;
+    transform: scale(1) translateY(0); 
+}
+
+.show-login #landing-view {
+    filter: blur(8px) brightness(0.6);
+    transform: scale(1.05); 
+}
+
+/* Form Styles */
+.input-modern { 
+    width: 100%; 
+    background: transparent; 
+    border: none; 
+    border-bottom: 2px solid rgba(255,255,255,0.2); 
+    padding: 10px 0; 
+    color: white; 
+    outline: none; 
+    transition: 0.3s; 
+}
+.input-modern:focus { border-bottom-color: var(--primary); }
+
+.select-modern { 
+    background-color: rgba(255,255,255,0.1); 
+    color: white; 
+    border: 1px solid rgba(255,255,255,0.1); 
+    padding: 10px; 
+    border-radius: 8px; 
+    width: 100%; 
+    margin-bottom: 15px; 
+    cursor: pointer; 
+}
+.select-modern option { background: var(--dark-bg); }
+
+.btn-submit { 
+    width: 100%; 
+    padding: 15px; 
+    background: var(--primary); 
+    color: white; 
+    border: none; 
+    border-radius: 8px; 
+    font-weight: 600; 
+    margin-top: 20px; 
+    transition: 0.3s; 
+}
+.btn-submit:hover { 
+    background: #2563eb; 
+    box-shadow: 0 10px 20px rgba(37, 99, 235, 0.2); 
+}
+
+.btn-close { 
+    position: absolute; 
+    top: 20px; right: 20px; 
+    background: rgba(255,255,255,0.1); 
+    width: 35px; height: 35px; 
+    border-radius: 50%;
+    border: none; 
+    color: white; 
+    display: flex; 
+    align-items: center; 
+    justify-content: center;
+    cursor: pointer; 
+    transition: 0.3s; 
+}
+.btn-close:hover { 
+    background: rgba(255,255,255,0.3); 
+    transform: rotate(90deg); 
+}
+
+@media (max-width: 576px) {
+    .login-card { width: 90%; padding: 30px; }
+    .display-text { font-size: 3rem; }
+}
+
+/* =========================================
+   EXTRA STYLES (Hotel Card, Footer, etc)
+   ========================================= */
+.hero-img {
+    width: 100%;
+    height: auto;
+    display: block;
+}
+.hero-img:hover {
+    opacity: 0.85;
+    transform: scale(1.01);
+}
+.hero-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    text-align: center;
+    color: #fff;
+    text-shadow: 0 2px 6px rgba(0,0,0,0.7);
+    padding: 1rem;
+    z-index: 3;
+}
+.hero-backdrop {
+    position: absolute;
+    inset: 0;
+    background: rgba(0,0,0,0.25);
+    z-index: 2;
+}
+
+/* Footer styles */
+.site-footer {
+    background: #111827; 
+    color: #e5e7eb;
+}
+.site-footer a { color: #e5e7eb; }
+.site-footer a:hover { color: #f3f4f6; text-decoration: underline; }
+.site-footer .contact h5, .site-footer .social h5 { color: #ffffff; font-size: 1rem; }
+
+@media (max-width: 576px) {
+    .site-footer .container { gap: 0.75rem; }
+}
+
+/* Hotel card styles */
+.hotel-card .card-img-top { height: 180px; object-fit: cover; }
+
+@media (min-width: 992px) {
+    .hotel-card .card-img-top { height: 160px; }
+}
