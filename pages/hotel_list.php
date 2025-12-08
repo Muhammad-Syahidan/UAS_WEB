@@ -1,11 +1,11 @@
 <?php
 session_start();
-// Matikan error reporting agar tampilan bersih
+// Matikan error reporting
 error_reporting(0); 
 include "../assets/koneksi.php";
 
 // ==========================================
-// 1. CEK USER LOGIN (Untuk Navbar)
+// 1. CEK USER LOGIN
 // ==========================================
 $iduser = $_SESSION["iduser"] ?? null;
 $user   = "Tamu";
@@ -28,27 +28,24 @@ if ($iduser) {
 }
 
 // ==========================================
-// 2. LOGIKA PENCARIAN (SEARCH)
+// 2. QUERY PENCARIAN
 // ==========================================
 $where_clauses = [];
 $params = [];
 $types = "";
 
-// Cek Filter Provinsi
 if (!empty($_GET['provinsi']) && $_GET['provinsi'] != "Pilih Semua Provinsi") {
     $where_clauses[] = "provinsi = ?";
     $params[] = $_GET['provinsi'];
     $types .= "s";
 }
 
-// Cek Filter Keyword (Nama Hotel)
 if (!empty($_GET['keyword'])) {
     $where_clauses[] = "nama_hotel LIKE ?";
     $params[] = "%" . $_GET['keyword'] . "%";
     $types .= "s";
 }
 
-// Susun Query
 $sql = "SELECT * FROM hotel_list";
 if (count($where_clauses) > 0) {
     $sql .= " WHERE " . implode(" AND ", $where_clauses);
@@ -76,15 +73,11 @@ $result = $stmt->get_result();
     <link rel="stylesheet" href="../css/main.css?v=<?= time(); ?>">
 
     <style>
-        /* Override/Tambahan Style Lokal */
         body { background-color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; }
         
-        /* 1. WARNA ORANGE UNTUK 'ID' (Sesuai Permintaan) */
-        .text-accent-orange {
-            color: #f97316 !important; /* Warna Orange Spesifik */
-        }
+        .text-accent-orange { color: #f97316 !important; }
 
-        /* Card Hotel */
+        /* HOTEL CARD */
         .hotel-card {
             border: none;
             border-radius: 16px;
@@ -101,34 +94,30 @@ $result = $stmt->get_result();
             box-shadow: 0 15px 30px rgba(14, 165, 233, 0.1);
         }
         
-        .card-img-top {
-            height: 200px;
-            object-fit: cover;
-        }
+        .card-img-top { height: 200px; object-fit: cover; }
 
         .badge-prov {
-            background-color: rgba(255, 255, 255, 0.9);
+            background-color: rgba(255, 255, 255, 0.95);
             color: #1e293b;
-            font-size: 0.75rem;
-            font-weight: 700;
-            padding: 5px 12px;
-            border-radius: 50px;
-            position: absolute;
-            top: 15px; left: 15px;
+            font-size: 0.75rem; font-weight: 700;
+            padding: 5px 12px; border-radius: 50px;
+            position: absolute; top: 15px; left: 15px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.1);
         }
 
         .btn-detail {
-            background-color: #0ea5e9;
-            color: white;
-            border-radius: 10px;
-            font-weight: 600;
-            padding: 10px;
-            width: 100%;
-            border: none;
-            transition: 0.3s;
+            background-color: #0ea5e9; color: white;
+            border-radius: 10px; font-weight: 600;
+            padding: 10px; width: 100%; border: none; transition: 0.3s;
         }
         .btn-detail:hover { background-color: #0284c7; color: white; }
+
+        /* Text Style Sederhana (Tanpa Line Clamp Error) */
+        .desc-text {
+            font-size: 0.9rem;
+            color: #64748b; /* Secondary color */
+            min-height: 3em; /* Menjaga tinggi kartu tetap rapi */
+        }
     </style>
 </head>
 <body>
@@ -181,7 +170,7 @@ $result = $stmt->get_result();
         <?php if ($result->num_rows > 0): ?>
             <?php while($row = $result->fetch_assoc()): ?>
                 <?php 
-                    // Logika Gambar
+                    // 1. Logika Gambar
                     $foto = $row['foto_utama'];
                     if (empty($foto)) {
                         $src = "https://via.placeholder.com/400x250?text=Hotel";
@@ -190,11 +179,20 @@ $result = $stmt->get_result();
                     } else {
                         $src = "../img/" . $foto;
                     }
+
+                    // 2. LOGIKA POTONG TEKS (Solusi Anti Error CSS)
+                    $deskripsi_asli = $row['deskripsi'] ?? 'Fasilitas lengkap tersedia.';
+                    // Potong jika lebih dari 100 karakter
+                    if (strlen($deskripsi_asli) > 100) {
+                        $deskripsi_tampil = substr($deskripsi_asli, 0, 100) . "...";
+                    } else {
+                        $deskripsi_tampil = $deskripsi_asli;
+                    }
                 ?>
                 <div class="col-md-6 col-lg-3">
                     <div class="hotel-card position-relative">
                         <span class="badge-prov"><i class="bi bi-geo-alt-fill text-warning"></i> <?= $row['provinsi'] ?></span>
-                        <img src="<?= $src ?>" class="card-img-top" alt="<?= htmlspecialchars($row['nama_hotel']) ?>">
+                        <img src="<?= $src ?>" class="card-img-top" alt="Foto Hotel">
                         
                         <div class="p-3 d-flex flex-column flex-grow-1">
                             <h5 class="fw-bold text-dark mb-1 text-truncate" title="<?= htmlspecialchars($row['nama_hotel']) ?>">
@@ -202,9 +200,9 @@ $result = $stmt->get_result();
                             </h5>
                             <p class="text-muted small mb-3"><i class="bi bi-building me-1"></i> <?= htmlspecialchars($row['kota']) ?></p>
                             
-                            <p class="small text-secondary mb-4 line-clamp-2" style="display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; height: 3em;">
-                                <?= htmlspecialchars($row['deskripsi'] ?? 'Fasilitas lengkap.') ?>
-                            </p>
+                            <div class="desc-text mb-4">
+                                <?= htmlspecialchars($deskripsi_tampil) ?>
+                            </div>
 
                             <div class="mt-auto">
                                 <a href="../hotel/rooms.php?id_hotel=<?= $row['id_hotel'] ?>" class="btn btn-detail">
@@ -217,9 +215,8 @@ $result = $stmt->get_result();
             <?php endwhile; ?>
         <?php else: ?>
             <div class="col-12 text-center py-5">
-                <img src="https://cdn-icons-png.flaticon.com/512/6134/6134065.png" width="100" class="mb-3 opacity-25">
-                <h4 class="text-muted">Tidak ada hotel ditemukan</h4>
-                <p class="text-secondary">Coba kata kunci lain atau ubah filter provinsi.</p>
+                <i class="bi bi-search display-1 text-muted opacity-25"></i>
+                <h4 class="text-muted mt-3">Tidak ada hotel ditemukan</h4>
                 <a href="../main.php" class="btn btn-outline-primary rounded-pill px-4 mt-2">Cari Lagi</a>
             </div>
         <?php endif; ?>

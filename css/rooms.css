@@ -1,12 +1,12 @@
 /* =========================================
-   STYLE KHUSUS HALAMAN ROOMS (FIXED)
+   STYLE KHUSUS ROOMS (CLEAN & NO WARNINGS)
    ========================================= */
 
 :root {
-    --c-primary: #0ea5e9;       /* Biru Utama */
+    --c-primary: #0ea5e9;       
     --c-primary-dark: #0284c7;
-    --c-accent: #f97316;        /* Oranye */
-    --c-bg: #f8fafc;            /* Background Abu */
+    --c-accent: #f97316;        
+    --c-bg: #f8fafc;            
     --c-card-bg: #ffffff;
     --c-text: #1e293b;
     --c-muted: #64748b;
@@ -20,7 +20,7 @@ body {
     overflow-x: hidden;
 }
 
-/* --- HERO HEADER --- */
+/* HERO HEADER */
 .hero-header {
     position: relative;
     height: 60vh;
@@ -46,17 +46,10 @@ body {
     text-align: left;
 }
 
-/* --- TOMBOL KEMBALI (GLASSMORPHISM FIXED) --- */
+/* TOMBOL KEMBALI (Standard CSS) */
 .btn-back {
     position: absolute; top: 30px; left: 30px; z-index: 10;
-    
-    /* Fallback (Jika browser tidak support blur) */
-    background-color: rgba(255, 255, 255, 0.2);
-    
-    /* Efek Blur Modern & Legacy */
-    -webkit-backdrop-filter: blur(10px);
-    backdrop-filter: blur(10px);
-    
+    background-color: rgba(255, 255, 255, 0.2); /* Solid transparan, tanpa blur */
     border: 1px solid rgba(255, 255, 255, 0.4);
     color: white; 
     padding: 10px 25px; 
@@ -69,8 +62,6 @@ body {
 .btn-back:hover { 
     background-color: white; 
     color: var(--c-primary);
-    -webkit-backdrop-filter: none;
-    backdrop-filter: none;
 }
 
 .badge-location {
@@ -81,14 +72,18 @@ body {
     box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
 }
 
-/* --- SECTION KAMAR --- */
+/* LAYOUT KARTU */
 .rooms-section {
     padding: 50px 0;
     margin-top: -40px; 
     position: relative; z-index: 5;
 }
 
-/* Wrapper Flexbox: Posisikan kartu di tengah */
+.section-title {
+    text-align: center;
+    margin-bottom: 45px;
+}
+
 .rooms-wrapper {
     display: flex;
     flex-wrap: wrap;
@@ -155,19 +150,16 @@ body {
     margin-bottom: 10px;
 }
 
-/* --- DESKRIPSI (LINE CLAMP FIX) --- */
+/* DESKRIPSI TANPA CSS ERROR */
 .room-desc {
     font-size: 0.95rem; 
     color: var(--c-muted); 
     line-height: 1.6;
     margin-bottom: 20px;
     
-    /* Syntax Wajib untuk Line Clamp Cross-Browser */
-    display: -webkit-box;           
-    -webkit-line-clamp: 3;          /* Batas 3 Baris */
-    -webkit-box-orient: vertical;   /* Wajib ada */
-    overflow: hidden;               
-    text-overflow: ellipsis;        
+    /* Menggunakan Height fix + Overflow Hidden sebagai pengganti line-clamp */
+    height: 3.2em; /* Tinggi kira-kira 2 baris teks */
+    overflow: hidden; 
 }
 
 .divider { height: 1px; background-color: #f1f5f9; margin-bottom: 20px; }
