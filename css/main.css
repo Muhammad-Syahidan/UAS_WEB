@@ -230,8 +230,8 @@ option { background-color: #fff; color: #333; }
 }
 .scroll-btn.show { opacity: 1; pointer-events: auto; }
 
-.btn-prev { left: -40px; }
-.btn-next { right: -40px; }
+.btn-prev { left: -80px; }
+.btn-next { right: -80px; }
 
 @media (max-width: 1200px) { 
     .btn-prev { left: 0px; } 
