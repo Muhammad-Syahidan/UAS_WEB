@@ -1,9 +1,12 @@
 <?php
 session_start();
+// Matikan error notice agar tampilan bersih
+error_reporting(0); 
 include "../assets/koneksi.php";
 
-// 1. Cek Parameter ID Hotel
-// Menggunakan 'id_hotel' sesuai yang dikirim dari main.php
+// ==========================================
+// 1. CEK ID HOTEL
+// ==========================================
 if (!isset($_GET['id_hotel']) || empty($_GET['id_hotel'])) {
     header("Location: ../main.php");
     exit();
@@ -12,7 +15,9 @@ if (!isset($_GET['id_hotel']) || empty($_GET['id_hotel'])) {
 $id_hotel = mysqli_real_escape_string($conn, $_GET['id_hotel']);
 $auth = $_SESSION['auth'] ?? 'Guest';
 
-// 2. Ambil Data Informasi Hotel
+// ==========================================
+// 2. AMBIL DATA HOTEL
+// ==========================================
 $q_hotel = $conn->prepare("SELECT * FROM hotel_list WHERE id_hotel = ?");
 $q_hotel->bind_param("i", $id_hotel);
 $q_hotel->execute();
@@ -24,19 +29,25 @@ if (!$hotel) {
     exit();
 }
 
-// Persiapan Foto Hotel untuk Header
-$foto_hotel_db = $hotel['foto_utama'];
+// Data Variabel Aman (Mencegah Error jika kosong)
+$nama_hotel     = $hotel['nama_hotel'] ?? 'Nama Hotel';
+$kota_hotel     = $hotel['kota'] ?? 'Lokasi';
+$provinsi_hotel = $hotel['provinsi'] ?? 'Indonesia';
+$foto_hotel_db  = $hotel['foto_utama'] ?? '';
+
+// Logika URL Gambar
 if (empty($foto_hotel_db)) {
     $bg_hotel = "https://via.placeholder.com/1200x600?text=Hotel+Image";
 } elseif (strpos($foto_hotel_db, 'http') === 0) {
     $bg_hotel = $foto_hotel_db;
 } else {
-    // Karena file ini ada di folder 'hotel/', kita harus mundur satu folder (../) untuk ke img/
     $bg_hotel = "../img/" . $foto_hotel_db;
 }
 
-// 3. Ambil Daftar Kamar (Room Types) berdasarkan ID Hotel
-$q_rooms = $conn->prepare("SELECT * FROM room_types WHERE id_hotel = ?");
+// ==========================================
+// 3. AMBIL DAFTAR KAMAR
+// ==========================================
+$q_rooms = $conn->prepare("SELECT * FROM room_types WHERE id_hotel = ? ORDER BY harga ASC");
 $q_rooms->bind_param("i", $id_hotel);
 $q_rooms->execute();
 $result_rooms = $q_rooms->get_result();
@@ -47,203 +58,304 @@ $result_rooms = $q_rooms->get_result();
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kamar di <?= htmlspecialchars($hotel['nama_hotel']) ?></title>
+    <title><?= htmlspecialchars($nama_hotel) ?> - Detail</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500&family=Outfit:wght@700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
-
+    
     <style>
+        /* =========================================
+           KONFIGURASI WARNA (Putih 60%, Biru 30%, Oranye 10%)
+           ========================================= */
         :root {
-            --primary: #0ea5e9;
-            --accent: #f97316;
-            --bg-body: #f8fafc;
-            --text-main: #1e293b;
+            --c-primary: #0ea5e9;       
+            --c-primary-dark: #0284c7;
+            --c-accent: #f97316;        
+            --c-bg: #f8fafc;            
         }
-        body { background-color: var(--bg-body); font-family: 'Inter', sans-serif; color: var(--text-main); }
-        h1, h2, h3, h4, h5 { font-family: 'Outfit', sans-serif; }
 
-        /* Header Hotel Image */
-        .hotel-header {
+        body {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: var(--c-bg);
+            color: #333;
+            overflow-x: hidden;
+        }
+
+        /* --- 1. HERO HEADER (Gambar Pudar ke Bawah) --- */
+        .hero-header {
             position: relative;
-            height: 60vh;
+            height: 65vh;           
+            min-height: 450px;
             background-size: cover;
             background-position: center;
-            border-bottom-left-radius: 30px;
-            border-bottom-right-radius: 30px;
-            overflow: hidden;
-            margin-bottom: 40px;
+            display: flex;
+            align-items: flex-end;  
         }
-        .hotel-overlay {
+
+        /* OVERLAY GRADIENT (Efek Pudar) */
+        .hero-overlay {
             position: absolute;
             inset: 0;
-            background: linear-gradient(to top, rgba(0,0,0,0.8), rgba(0,0,0,0.2));
-            display: flex;
-            align-items: flex-end;
-            padding: 40px;
+            /* Gradient dari transparan (atas) ke warna background body (bawah) */
+            background: linear-gradient(to bottom, 
+                rgba(0,0,0,0.3) 0%, 
+                rgba(0,0,0,0.5) 60%, 
+                var(--c-bg) 100%
+            );
         }
-        .back-btn {
-            position: absolute;
-            top: 20px; left: 20px;
-            background: rgba(255,255,255,0.2);
-            backdrop-filter: blur(5px);
+
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            width: 100%;
+            padding-bottom: 60px; /* Jarak dari bawah agar tidak tertutup gradient total */
+            color: white;         
+            text-align: left;     /* RATA KIRI */
+        }
+
+        .badge-location {
+            background-color: var(--c-accent); 
             color: white;
             padding: 8px 20px;
             border-radius: 50px;
-            text-decoration: none;
-            transition: 0.3s;
-            z-index: 10;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            margin-bottom: 15px;
+            box-shadow: 0 4px 15px rgba(249, 115, 22, 0.4);
         }
-        .back-btn:hover { background: rgba(255,255,255,0.4); color: white; }
 
-        /* Room Cards */
+        .btn-back {
+            position: absolute; top: 30px; left: 30px; z-index: 10;
+            background: rgba(255,255,255,0.2); backdrop-filter: blur(5px);
+            color: white; padding: 10px 25px; border-radius: 50px; text-decoration: none;
+            border: 1px solid rgba(255,255,255,0.4); transition: 0.3s; font-weight: 500;
+        }
+        .btn-back:hover { background: white; color: var(--c-primary); }
+
+
+        /* --- 2. ROOM CARDS --- */
+        .rooms-container {
+            position: relative;
+            z-index: 5;
+            padding-bottom: 60px;
+            margin-top: -20px; /* Sedikit naik ke area gradient */
+        }
+
+        .cards-wrapper {
+            display: flex;
+            justify-content: center; /* KARTU DI TENGAH */
+            flex-wrap: wrap;
+            gap: 30px;
+        }
+
+        .room-card-item {
+            flex: 0 0 auto;
+            width: 380px;  
+            max-width: 100%;
+        }
+
         .room-card {
-            border: none;
-            border-radius: 15px;
-            overflow: hidden;
-            box-shadow: 0 5px 20px rgba(0,0,0,0.05);
             background: white;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 15px 40px rgba(0,0,0,0.05);
             transition: transform 0.3s ease;
             height: 100%;
+            display: flex; flex-direction: column;
+            border: 1px solid #edf2f7;
+        }
+
+        .room-card:hover {
+            transform: translateY(-10px);
+            box-shadow: 0 20px 50px rgba(14, 165, 233, 0.15);
+        }
+
+        .room-img {
+            width: 100%;
+            height: 240px; 
+            object-fit: cover;
+        }
+
+        .card-body {
+            padding: 25px;
             display: flex;
             flex-direction: column;
+            flex-grow: 1;
         }
-        .room-card:hover { transform: translateY(-5px); }
-        
-        .room-img-top {
-            height: 200px;
-            object-fit: cover;
-            width: 100%;
+
+        .room-title {
+            font-weight: 700;
+            font-size: 1.35rem;
+            margin-bottom: 10px;
+            color: #1e293b;
         }
-        
-        .card-body { padding: 20px; display: flex; flex-direction: column; flex-grow: 1; }
-        
+
+        .room-desc {
+            color: #64748b;
+            font-size: 0.95rem;
+            line-height: 1.6;
+            margin-bottom: 20px;
+            display: -webkit-box;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
         .price-text {
-            color: var(--accent);
+            color: var(--c-accent); 
+            font-size: 1.5rem;
             font-weight: 800;
-            font-size: 1.25rem;
         }
-        
-        .facility-item { font-size: 0.9rem; color: #64748b; margin-right: 10px; margin-bottom: 5px; display: inline-block; }
-        
-        .btn-book {
-            background-color: var(--primary);
+
+        .btn-action {
+            background-color: var(--c-primary); 
             color: white;
             border: none;
-            padding: 10px;
-            border-radius: 10px;
+            padding: 14px;
+            border-radius: 12px;
             font-weight: 600;
+            font-size: 1.1rem;
             width: 100%;
-            margin-top: auto; /* Push button to bottom */
+            margin-top: auto;
+            text-decoration: none;
+            text-align: center;
             transition: 0.3s;
+            display: block;
         }
-        .btn-book:hover { background-color: #0284c7; }
-        .btn-disabled { background-color: #cbd5e1; color: #94a3b8; cursor: not-allowed; }
+        .btn-action:hover { background-color: var(--c-primary-dark); color: white; }
+        
+        .badge-stok {
+            position: absolute; top: 15px; right: 15px;
+            background: rgba(255,255,255,0.95); color: #333;
+            padding: 6px 14px; border-radius: 8px;
+            font-weight: 700; font-size: 0.8rem;
+            box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+        }
+
+        /* Judul Section Kamar */
+        .section-title {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+        .section-title h3 { font-weight: 800; color: #1e293b; }
+        
     </style>
 </head>
 <body>
 
-<div class="hotel-header" style="background-image: url('<?= $bg_hotel ?>');">
-    <a href="../main.php" class="back-btn"><i class="bi bi-arrow-left"></i> Kembali ke Beranda</a>
+<header class="hero-header" style="background-image: url('<?= $bg_hotel ?>');">
+    <div class="hero-overlay"></div>
     
-    <div class="container">
-        <div class="hotel-overlay">
-            <div class="text-white">
-                <span class="badge bg-warning text-dark mb-2"><i class="bi bi-geo-alt-fill"></i> <?= htmlspecialchars($hotel['provinsi']) ?></span>
-                <h1 class="display-4 fw-bold mb-0"><?= htmlspecialchars($hotel['nama_hotel']) ?></h1>
-                <p class="fs-5 opacity-75"><i class="bi bi-building me-2"></i><?= htmlspecialchars($hotel['kota']) ?></p>
-                <div class="mt-3 text-white-50 small" style="max-width: 700px;">
-                    <?= htmlspecialchars($hotel['deskripsi_hotel'] ?? 'Nikmati pengalaman menginap terbaik bersama kami.') ?>
-                </div>
-            </div>
-        </div>
-    </div>
-</div>
+    <a href="../main.php" class="btn-back">
+        <i class="bi bi-arrow-left me-2"></i> Kembali
+    </a>
 
-<div class="container mb-5">
-    <h3 class="fw-bold mb-4 border-start border-4 border-primary ps-3">Pilihan Kamar Tersedia</h3>
+    <div class="container hero-content">
+        <span class="badge-location">
+            <i class="bi bi-geo-alt-fill me-2"></i> <?= htmlspecialchars($kota_hotel) ?>, <?= htmlspecialchars($provinsi_hotel) ?>
+        </span>
+        
+        <h1 class="display-3 fw-bold mb-3"><?= htmlspecialchars($nama_hotel) ?></h1>
+        <p class="fs-5 opacity-90" style="max-width: 700px; line-height: 1.6;">
+            <?= htmlspecialchars($hotel['deskripsi_hotel'] ?? 'Nikmati kenyamanan dan kemewahan terbaik bersama kami dengan pelayanan bintang lima.') ?>
+        </p>
+    </div>
+</header>
+
+<div class="container rooms-container">
     
-    <div class="row g-4">
+    <div class="section-title">
+        <h3>Pilihan Tipe Kamar</h3>
+        <p class="text-muted">Temukan kamar yang sesuai dengan kebutuhan Anda</p>
+    </div>
+
+    <div class="cards-wrapper">
+        
         <?php if ($result_rooms->num_rows > 0): ?>
             <?php while($kamar = $result_rooms->fetch_assoc()): ?>
                 <?php
-                    // Logika Foto Kamar
-                    $foto_kamar_db = $kamar['foto'];
+                    // Gambar Kamar
+                    $foto_kamar_db = $kamar['foto'] ?? '';
                     if (empty($foto_kamar_db)) {
-                        $src_kamar = "https://via.placeholder.com/400x250?text=Room+Image";
+                        $src_kamar = "https://via.placeholder.com/600x400?text=No+Image";
                     } elseif (strpos($foto_kamar_db, 'http') === 0) {
                         $src_kamar = $foto_kamar_db;
                     } else {
                         $src_kamar = "../img/" . $foto_kamar_db;
                     }
 
-                    // Format Rupiah
                     $harga = number_format($kamar['harga'], 0, ',', '.');
-                    
-                    // Fasilitas Array
-                    $fasilitas = explode(',', $kamar['fasilitas']);
                     $stok = $kamar['stok'];
                 ?>
 
-                <div class="col-md-6 col-lg-4">
-                    <div class="room-card">
-                        <img src="<?= $src_kamar ?>" class="room-img-top" alt="<?= htmlspecialchars($kamar['nama_kamar']) ?>">
+                <div class="room-card-item">
+                    <div class="room-card position-relative">
+                        
+                        <?php if($stok > 0): ?>
+                            <div class="badge-stok text-success"><i class="bi bi-check-circle-fill"></i> Sisa <?= $stok ?></div>
+                        <?php else: ?>
+                            <div class="badge-stok text-danger"><i class="bi bi-x-circle-fill"></i> Habis</div>
+                        <?php endif; ?>
+
+                        <img src="<?= $src_kamar ?>" class="room-img" alt="Room Image">
                         
                         <div class="card-body">
-                            <div class="d-flex justify-content-between align-items-start mb-2">
-                                <h5 class="card-title fw-bold mb-0"><?= htmlspecialchars($kamar['nama_kamar']) ?></h5>
-                            </div>
+                            <h5 class="room-title"><?= htmlspecialchars($kamar['nama_kamar'] ?? 'Tipe Kamar') ?></h5>
                             
-                            <p class="price-text mb-2">Rp <?= $harga ?> <span class="text-muted fs-6 fw-normal">/ malam</span></p>
-
-                            <div class="mb-3">
-                                <?php if($stok > 0): ?>
-                                    <span class="badge bg-success-subtle text-success border border-success"><i class="bi bi-check-circle"></i> Tersedia <?= $stok ?> Unit</span>
-                                <?php else: ?>
-                                    <span class="badge bg-danger-subtle text-danger border border-danger"><i class="bi bi-x-circle"></i> Habis</span>
-                                <?php endif; ?>
-                            </div>
-
-                            <p class="card-text text-muted small mb-3">
-                                <?= substr(htmlspecialchars($kamar['deskripsi']), 0, 100) ?>...
+                            <p class="room-desc">
+                                <?= htmlspecialchars($kamar['deskripsi'] ?? 'Deskripsi tidak tersedia.') ?>
                             </p>
 
-                            <div class="mb-4">
-                                <?php foreach(array_slice($fasilitas, 0, 4) as $fas): ?>
-                                    <span class="facility-item bg-light px-2 py-1 rounded"><i class="bi bi-star-fill text-warning me-1" style="font-size: 0.7rem;"></i><?= trim($fas) ?></span>
-                                <?php endforeach; ?>
-                            </div>
+                            <div class="border-top pt-3 mt-3">
+                                <div class="d-flex justify-content-between align-items-end mb-3">
+                                    <span class="text-muted small">Harga per malam</span>
+                                    <span class="price-text">Rp <?= $harga ?></span>
+                                </div>
 
-                            <?php if($stok <= 0): ?>
-                                <button class="btn btn-disabled w-100 rounded-pill" disabled>Kamar Penuh</button>
-                            <?php elseif($auth == 'Guest'): ?>
-                                <button onclick="alert('Silakan Login terlebih dahulu untuk memesan kamar.'); window.location.href='../index.php'" class="btn btn-outline-primary w-100 rounded-pill">
-                                    <i class="bi bi-lock"></i> Login untuk Pesan
-                                </button>
-                            <?php elseif($auth == 'Pengguna'): ?>
-                                <a href="../user/booking.php?id=<?= $kamar['id_room_type'] ?>" class="btn btn-book rounded-pill text-center text-decoration-none">
-                                    Pesan Sekarang <i class="bi bi-arrow-right"></i>
-                                </a>
-                            <?php else: ?>
-                                <button class="btn btn-secondary w-100 rounded-pill" disabled>Mode Admin/Staff</button>
-                            <?php endif; ?>
+                                <?php if($stok <= 0): ?>
+                                    <button class="btn btn-secondary w-100 rounded-3 py-3" disabled>Tidak Tersedia</button>
+                                <?php elseif($auth == 'Guest'): ?>
+                                    <button onclick="if(confirm('Anda harus login untuk memesan. Lanjut login?')){ window.location.href='../index.php'; }" class="btn btn-outline-primary w-100 py-3 fw-bold rounded-3">
+                                        Pesan Sekarang
+                                    </button>
+                                <?php elseif($auth == 'Pengguna'): ?>
+                                    <a href="../user/booking.php?id=<?= $kamar['id_room_type'] ?>" class="btn btn-action rounded-3">
+                                        Pilih Kamar Ini
+                                    </a>
+                                <?php else: ?>
+                                    <button class="btn btn-secondary w-100 py-3 rounded-3" disabled>Mode Admin</button>
+                                <?php endif; ?>
+                            </div>
                         </div>
                     </div>
                 </div>
 
             <?php endwhile; ?>
         <?php else: ?>
-            <div class="col-12">
-                <div class="alert alert-info text-center py-5">
-                    <i class="bi bi-info-circle display-4 mb-3 d-block"></i>
-                    <h4>Belum ada kamar tersedia</h4>
-                    <p>Mohon maaf, saat ini belum ada data kamar untuk hotel ini.</p>
+            <div class="col-12 text-center py-5">
+                <div class="bg-white p-5 rounded-4 shadow-sm mx-auto" style="max-width: 500px;">
+                    <i class="bi bi-search display-3 text-muted mb-3 d-block"></i>
+                    <h4>Belum ada kamar</h4>
+                    <p class="text-muted">Maaf, belum ada data kamar yang tersedia untuk hotel ini.</p>
                     <a href="../main.php" class="btn btn-primary mt-3">Cari Hotel Lain</a>
                 </div>
             </div>
         <?php endif; ?>
+        
     </div>
 </div>
+
+<footer class="text-center py-4 bg-white border-top">
+    <div class="container">
+        <small class="text-muted">&copy; 2025 HOTELID Corp. Premium Hotel.</small>
+        <div class="mt-3">
+            <a href="#" class="text-muted mx-2 fs-5"><i class="bi bi-instagram"></i></a>
+            <a href="#" class="text-muted mx-2 fs-5"><i class="bi bi-twitter-x"></i></a>
+            <a href="#" class="text-muted mx-2 fs-5"><i class="bi bi-linkedin"></i></a>
+        </div>
+    </div>
+</footer>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 </body>
