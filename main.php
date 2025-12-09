@@ -3,7 +3,7 @@ session_start();
 include "assets/koneksi.php";
 
 // ==========================================
-// 1. CEK LOGIN & AMBIL DATA USER
+// 1. CEK LOGIN
 // ==========================================
 if (!isset($_SESSION["iduser"])) {
     header("Location: login.php");
@@ -43,9 +43,9 @@ $daftar_provinsi = [
 sort($daftar_provinsi); 
 
 // ==========================================
-// 3. AMBIL REKOMENDASI (LIMIT 30)
+// 3. REKOMENDASI HOTEL
 // ==========================================
-$rec_query = "SELECT * FROM hotel_list ORDER BY RAND() LIMIT 30";
+$rec_query = "SELECT * FROM hotel_list ORDER BY id_hotel DESC LIMIT 30";
 $rec_result = $conn->query($rec_query);
 ?>
 
@@ -60,7 +60,39 @@ $rec_result = $conn->query($rec_query);
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
-    <link rel="stylesheet" href="css/main.css">
+    <link rel="stylesheet" href="css/main.css?v=<?= time(); ?>">
+
+    <style>
+        /* CSS KHUSUS TOMBOL FORM */
+        .btn-form-action {
+            background: none;
+            color: inherit;
+            border: none;
+            padding: 0;
+            font: inherit;
+            cursor: pointer;
+            outline: inherit;
+            width: 100%;
+        }
+        
+        .btn-lihat-kamar {
+            display: block;
+            width: 100%;
+            padding: 6px 12px;
+            font-size: 0.875rem;
+            font-weight: 600;
+            text-align: center;
+            color: white;
+            background-color: transparent;
+            border: 1px solid white;
+            border-radius: 50px;
+            transition: all 0.3s;
+        }
+        .btn-lihat-kamar:hover {
+            background-color: white;
+            color: #333;
+        }
+    </style>
 </head>
 <body>
 
@@ -88,15 +120,11 @@ $rec_result = $conn->query($rec_query);
                             <li><h6 class="dropdown-header text-muted">Manajemen Hotel</h6></li>
                             <li><a class="dropdown-item" href="admin/add_hotelinput.php"><i class="bi bi-plus-lg"></i> Tambah Hotel</a></li>
                             <li><a class="dropdown-item" href="admin/list_hotel.php"><i class="bi bi-pencil-square"></i> Edit Data Hotel</a></li>
-                            
                             <li><hr class="dropdown-divider"></li>
-                            
                             <li><h6 class="dropdown-header text-muted">Manajemen Kamar</h6></li>
                             <li><a class="dropdown-item" href="admin/add_roominput.php"><i class="bi bi-plus-lg"></i> Tambah Kamar</a></li>
                             <li><a class="dropdown-item" href="admin/list_rooms.php"><i class="bi bi-pencil-square"></i> Edit Data Kamar</a></li>
-                            
                             <li><hr class="dropdown-divider"></li>
-                            
                             <li><h6 class="dropdown-header text-muted">Lainnya</h6></li>
                             <li><a class="dropdown-item" href="admin/manage_users.php"><i class="bi bi-people"></i> Kelola User</a></li>
                             <li><a class="dropdown-item" href="admin/reports.php"><i class="bi bi-file-earmark-bar-graph"></i> Laporan</a></li>
@@ -196,9 +224,7 @@ $rec_result = $conn->query($rec_query);
 
     <div class="scroll-container-wrapper">
         
-        <button class="scroll-btn btn-prev" id="scrollLeftBtn">
-            <i class="bi bi-chevron-left"></i>
-        </button>
+        <button class="scroll-btn btn-prev" id="scrollLeftBtn"><i class="bi bi-chevron-left"></i></button>
 
         <div class="horizontal-scroll" id="scrollContainer">
             <?php if ($rec_result && $rec_result->num_rows > 0): ?>
@@ -230,9 +256,12 @@ $rec_result = $conn->query($rec_query);
                             </p>
                             
                             <div class="mt-auto">
-                                <a href="hotel/rooms.php?id_hotel=<?= $hotel['id_hotel'] ?>" class="btn btn-outline-light btn-sm w-100 rounded-pill">
-                                    Lihat Kamar
-                                </a>
+                                <form action="hotel/rooms.php" method="POST">
+                                    <input type="hidden" name="id_hotel" value="<?= $hotel['id_hotel'] ?>">
+                                    <button type="submit" class="btn-lihat-kamar">
+                                        Lihat Kamar
+                                    </button>
+                                </form>
                             </div>
 
                         </div>
@@ -247,9 +276,7 @@ $rec_result = $conn->query($rec_query);
             <?php endif; ?>
         </div>
 
-        <button class="scroll-btn btn-next" id="scrollRightBtn">
-            <i class="bi bi-chevron-right"></i>
-        </button>
+        <button class="scroll-btn btn-next" id="scrollRightBtn"><i class="bi bi-chevron-right"></i></button>
 
     </div>
 </div>
