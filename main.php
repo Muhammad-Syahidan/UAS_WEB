@@ -82,15 +82,15 @@ $rec_result = $conn->query($rec_query);
             font-size: 0.875rem;
             font-weight: 600;
             text-align: center;
-            color: white;
-            background-color: transparent;
+            color: #ffffff;
+            background-color: #f97316;
             border: 1px solid white;
             border-radius: 50px;
             transition: all 0.3s;
         }
         .btn-lihat-kamar:hover {
-            background-color: white;
-            color: #333;
+            background-color: #ea580c;
+            color: #ffffffff;
         }
     </style>
 </head>
