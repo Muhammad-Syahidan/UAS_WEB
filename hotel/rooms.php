@@ -1,25 +1,33 @@
 <?php
 session_start();
-// Matikan pesan error PHP agar tidak merusak layout HTML
+// Matikan notifikasi error PHP
 error_reporting(0); 
-
-// Pastikan jalur ke file koneksi benar (naik satu folder dari 'hotel/')
 include "../assets/koneksi.php";
 
 // ==========================================
-// 1. VALIDASI AKSES HALAMAN
+// 1. VALIDASI ID HOTEL (Support POST & GET)
 // ==========================================
-// Jika id_hotel tidak ada di URL, paksa kembali ke main.php
-if (!isset($_GET['id_hotel']) || empty($_GET['id_hotel'])) {
+$id_hotel = null;
+
+// Cek apakah ada data dari POST (Metode Tersembunyi)
+if (isset($_POST['id_hotel']) && !empty($_POST['id_hotel'])) {
+    $id_hotel = mysqli_real_escape_string($conn, $_POST['id_hotel']);
+} 
+// Cek apakah ada data dari GET (Metode Link Biasa - Fallback)
+elseif (isset($_GET['id_hotel']) && !empty($_GET['id_hotel'])) {
+    $id_hotel = mysqli_real_escape_string($conn, $_GET['id_hotel']);
+} 
+
+// Jika ID tidak ditemukan sama sekali, kembalikan ke main
+if (!$id_hotel) {
     header("Location: ../main.php");
     exit();
 }
 
-$id_hotel = mysqli_real_escape_string($conn, $_GET['id_hotel']);
-$auth = $_SESSION['auth'] ?? 'Guest'; // Default user sebagai Guest jika belum login
+$auth = $_SESSION['auth'] ?? 'Guest';
 
 // ==========================================
-// 2. AMBIL DATA HOTEL (QUERY 1)
+// 2. AMBIL DATA HOTEL
 // ==========================================
 $q_hotel = $conn->prepare("SELECT * FROM hotel_list WHERE id_hotel = ?");
 $q_hotel->bind_param("i", $id_hotel);
@@ -27,33 +35,29 @@ $q_hotel->execute();
 $res_hotel = $q_hotel->get_result();
 $hotel = $res_hotel->fetch_assoc();
 
-// Jika ID Hotel tidak valid/tidak ditemukan
 if (!$hotel) {
     echo "<script>alert('Data hotel tidak ditemukan!'); window.location='../main.php';</script>";
     exit();
 }
 
-// Menyiapkan variabel data hotel dengan nilai default (fallback)
 $nama_hotel      = $hotel['nama_hotel'] ?? 'Nama Hotel';
 $kota_hotel      = $hotel['kota'] ?? 'Kota';
 $provinsi_hotel  = $hotel['provinsi'] ?? 'Indonesia';
 $deskripsi_hotel = $hotel['deskripsi'] ?? 'Deskripsi hotel belum tersedia.';
 $foto_hotel_db   = $hotel['foto_utama'] ?? '';
 
-// Logika Path Gambar Header
+// Logika Path Gambar
 if (empty($foto_hotel_db)) {
     $bg_hotel = "https://via.placeholder.com/1200x600?text=Hotel+Image";
 } elseif (strpos($foto_hotel_db, 'http') === 0) {
     $bg_hotel = $foto_hotel_db;
 } else {
-    // Jalur gambar dari folder 'hotel/' harus mundur ke '../img/'
     $bg_hotel = "../img/" . $foto_hotel_db;
 }
 
 // ==========================================
-// 3. AMBIL DATA KAMAR (QUERY 2)
+// 3. AMBIL DATA KAMAR
 // ==========================================
-// Mengurutkan harga dari terendah agar Standard Room muncul duluan
 $q_rooms = $conn->prepare("SELECT * FROM room_types WHERE id_hotel = ? ORDER BY harga ASC");
 $q_rooms->bind_param("i", $id_hotel);
 $q_rooms->execute();
@@ -67,7 +71,7 @@ $result_rooms = $q_rooms->get_result();
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title><?= htmlspecialchars($nama_hotel) ?> - Pilihan Kamar</title>
     
-    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet">
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
@@ -78,41 +82,34 @@ $result_rooms = $q_rooms->get_result();
 
 <header class="hero-header" style="background-image: url('<?= $bg_hotel ?>');">
     <div class="hero-overlay"></div>
-    
-    <a href="../main.php" class="btn-back">
-        <i class="bi bi-arrow-left me-2"></i> Kembali
-    </a>
+    <a href="../main.php" class="btn-back"><i class="bi bi-arrow-left me-2"></i> Kembali</a>
 
     <div class="container hero-content">
         <span class="badge-location">
             <i class="bi bi-geo-alt-fill me-2"></i> <?= htmlspecialchars($kota_hotel) ?>, <?= htmlspecialchars($provinsi_hotel) ?>
         </span>
-        <h1 class="display-4 fw-bold mb-3 text-white"><?= htmlspecialchars($nama_hotel) ?></h1>
-        <p class="fs-5 opacity-90 text-white" style="max-width: 750px; line-height: 1.6;">
+        <h1 class="display-4 fw-bold mb-3"><?= htmlspecialchars($nama_hotel) ?></h1>
+        <p class="fs-5 opacity-90" style="max-width: 700px; line-height: 1.6;">
             <?= htmlspecialchars($deskripsi_hotel) ?>
         </p>
     </div>
 </header>
 
 <div class="container rooms-section">
-    
     <div class="text-center mb-5">
         <h3 class="fw-bold text-dark">Pilihan Tipe Kamar</h3>
-        <p class="text-muted">Pilih kamar yang sesuai dengan kebutuhan dan budget Anda</p>
+        <p class="text-muted">Pilih kamar yang sesuai dengan kebutuhan Anda</p>
     </div>
 
     <div class="rooms-wrapper">
-        
         <?php if ($result_rooms->num_rows > 0): ?>
             <?php while($kamar = $result_rooms->fetch_assoc()): ?>
                 <?php
-                    // Variabel Kamar
                     $tipe_kamar = $kamar['tipe_kamar']; 
                     $harga      = number_format($kamar['harga'], 0, ',', '.');
                     $stok       = $kamar['stok'];
                     $deskripsi  = $kamar['deskripsi'] ?? 'Fasilitas lengkap tersedia.';
 
-                    // Validasi Gambar Kamar
                     $foto_kamar_db = $kamar['foto'];
                     if (empty($foto_kamar_db)) {
                         $src_kamar = "https://via.placeholder.com/500x300?text=No+Image";
@@ -125,7 +122,6 @@ $result_rooms = $q_rooms->get_result();
 
                 <div class="room-card-item">
                     <div class="room-card">
-                        
                         <div class="room-img-container">
                             <?php if($stok > 0): ?>
                                 <div class="badge-stok bg-success-custom">
@@ -136,20 +132,14 @@ $result_rooms = $q_rooms->get_result();
                                     <i class="bi bi-x-circle-fill me-1"></i> Habis
                                 </div>
                             <?php endif; ?>
-
                             <img src="<?= $src_kamar ?>" class="room-img" alt="<?= htmlspecialchars($tipe_kamar) ?>">
                         </div>
 
                         <div class="card-body">
                             <span class="room-type-label">HOTEL ROOM</span>
                             <h4 class="room-title"><?= htmlspecialchars($tipe_kamar) ?></h4>
-                            
-                            <p class="room-desc">
-                                <?= htmlspecialchars($deskripsi) ?>
-                            </p>
-
+                            <p class="room-desc"><?= htmlspecialchars($deskripsi) ?></p>
                             <div class="divider"></div>
-
                             <div class="price-wrapper">
                                 <span class="price-label">Harga per malam</span>
                                 <span class="price-tag">Rp <?= $harga ?></span>
@@ -171,7 +161,6 @@ $result_rooms = $q_rooms->get_result();
                         </div>
                     </div>
                 </div>
-
             <?php endwhile; ?>
         <?php else: ?>
             <div class="col-12 text-center py-5">
@@ -183,7 +172,6 @@ $result_rooms = $q_rooms->get_result();
                 </div>
             </div>
         <?php endif; ?>
-
     </div>
 </div>
 
