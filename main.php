@@ -171,7 +171,7 @@ $rec_result = $conn->query($rec_query);
                         <li><span class="dropdown-header">Halo, <?= $user ?></span></li>
                         <li><a class="dropdown-item text-light" href="main.php?p=profil"><i class="bi bi-person me-2"></i> Profil Saya</a></li>
                         <li><hr class="dropdown-divider bg-secondary"></li>
-                        <li><a class="dropdown-item text-danger" href="assets/logout.php"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
+                        <li><a class="dropdown-item text-danger" href="logout.php"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
                     </ul>
                 </div>
             </div>
