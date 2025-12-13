@@ -198,9 +198,9 @@ $filter_role = $_GET['role'] ?? '';
             <div class="table-card">
                 <div class="d-flex justify-content-between align-items-center mb-4">
                     <h4 class="fw-bold m-0 text-dark">Daftar Pengguna (<?= $users->num_rows ?>)</h4>
-                    <button class="btn-add" onclick="alert('Fitur tambah user belum aktif')">
-                        <i class="bi bi-plus-lg me-1"></i> User Baru
-                    </button>
+                    <a href="add_userinput.php" class="btn-add">
+                         <i class="bi bi-plus-lg me-1"></i> User Baru
+                    </a>
                 </div>
 
                 <div class="table-responsive">
@@ -227,7 +227,6 @@ $filter_role = $_GET['role'] ?? '';
                                         <?php 
                                             $badge = 'bg-secondary-subtle text-secondary';
                                             if($u['auth']=='Administrator') $badge='bg-warning-subtle text-warning-emphasis border border-warning-subtle';
-                                            if($u['auth']=='Resepsionis') $badge='bg-info-subtle text-info-emphasis border border-info-subtle';
                                             if($u['auth']=='Pengguna') $badge='bg-success-subtle text-success-emphasis border border-success-subtle';
                                         ?>
                                         <span class="badge <?= $badge ?> rounded-pill px-3 py-2">
