@@ -110,22 +110,6 @@ $rec_result = $conn->query($rec_query);
                     </li>
                 <?php endif; ?>
 
-                <?php if($auth == 'Resepsionis'): ?>
-                    <li class="nav-item dropdown">
-                        <a class="nav-link dropdown-toggle text-info" href="#" role="button" data-bs-toggle="dropdown">
-                            <i class="bi bi-pc-display"></i> Front Desk
-                        </a>
-                        <ul class="dropdown-menu">
-                            <li><a class="dropdown-item" href="reception/checkin.php"><i class="bi bi-box-arrow-in-right"></i> Check In</a></li>
-                            <li><a class="dropdown-item" href="reception/checkout.php"><i class="bi bi-box-arrow-right"></i> Check Out</a></li>
-                            <li><a class="dropdown-item" href="reception/guest_list.php"><i class="bi bi-list-check"></i> Daftar Tamu</a></li>
-                        </ul>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="reception/chat.php"><i class="bi bi-chat-dots"></i> Chat Tamu</a>
-                    </li>
-                <?php endif; ?>
-
                 <?php if($auth == 'Pengguna' || $auth == 'User'): ?>
                     <li class="nav-item">
                         <a class="nav-link" href="user/my_bookings.php"><i class="bi bi-ticket-perforated"></i> Pesanan Saya</a>
