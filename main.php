@@ -129,10 +129,6 @@ $rec_result = $conn->query($rec_query);
                 <?php if($auth == 'Pengguna' || $auth == 'User'): ?>
                     <li class="nav-item">
                         <a class="nav-link" href="user/my_bookings.php"><i class="bi bi-ticket-perforated"></i> Pesanan Saya</a>
-                    </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="user/favorites.php"><i class="bi bi-heart"></i> Favorit</a>
-                    </li>
                 <?php endif; ?>
             </ul>
 
