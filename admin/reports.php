@@ -2,49 +2,48 @@
 session_start();
 include "../assets/koneksi.php";
 
-// 1. Cek Admin
+
 if (!isset($_SESSION["iduser"]) || ($_SESSION['auth'] != 'Administrator')) {
     header("Location: ../main.php"); exit();
 }
 
-// 2. Ambil List Provinsi untuk Filter
 $provinsi_list = $conn->query("SELECT DISTINCT provinsi FROM hotel_list ORDER BY provinsi ASC");
 
-// 3. Logika Filter Statistik
-$where_hotel = "WHERE 1=1";
-$where_kamar = "WHERE 1=1"; // Untuk join ke hotel
-$judul_filter = "Semua Provinsi";
+
+$where_hotel = "WHERE 1=1"; 
+$judul_filter = "Semua Data Nasional";
 
 if (isset($_GET['provinsi']) && !empty($_GET['provinsi'])) {
     $prov = mysqli_real_escape_string($conn, $_GET['provinsi']);
-    $where_hotel .= " AND provinsi = '$prov'";
-    // Filter kamar berdasarkan hotel di provinsi tersebut
-    $where_kamar .= " AND id_hotel IN (SELECT id_hotel FROM hotel_list WHERE provinsi = '$prov')";
+    $where_hotel .= " AND hotel_list.provinsi = '$prov'";
     $judul_filter = "Provinsi " . htmlspecialchars($prov);
 }
 
-// 4. Hitung Statistik
-// Total Hotel
 $q_hotel = $conn->query("SELECT COUNT(*) as total FROM hotel_list $where_hotel");
 $total_hotel = $q_hotel->fetch_assoc()['total'];
 
-// Total Kamar & Estimasi Pendapatan (Harga * Stok)
-// Kita join karena tabel kamar tidak punya kolom provinsi langsung
 $q_kamar = $conn->query("
-    SELECT 
-        SUM(room_types.stok) as total_kamar, 
-        SUM(room_types.harga * room_types.stok) as potensi_pendapatan 
+    SELECT SUM(room_types.stok) as total_kamar 
     FROM room_types 
     JOIN hotel_list ON room_types.id_hotel = hotel_list.id_hotel
     $where_hotel
 ");
 $data_kamar = $q_kamar->fetch_assoc();
 $total_kamar_tersedia = $data_kamar['total_kamar'] ?? 0;
-$potensi_pendapatan = $data_kamar['potensi_pendapatan'] ?? 0;
 
-// Simulasi Data Booking (Karena belum ada tabel transaksi real)
-// Anggaplah 10% dari total kamar sudah dipesan sebagai contoh data
-$total_booking = ceil($total_kamar_tersedia * 0.1); 
+$q_transaksi = $conn->query("
+    SELECT 
+        COUNT(bookings.id_booking) as jumlah_transaksi,
+        SUM(bookings.total_harga) as total_omset
+    FROM bookings
+    JOIN room_types ON bookings.id_room_type = room_types.id_room_type
+    JOIN hotel_list ON room_types.id_hotel = hotel_list.id_hotel
+    $where_hotel
+");
+$data_transaksi = $q_transaksi->fetch_assoc();
+
+$total_booking_real = $data_transaksi['jumlah_transaksi'] ?? 0;
+$total_pendapatan_real = $data_transaksi['total_omset'] ?? 0;
 ?>
 
 <!DOCTYPE html>
@@ -58,13 +57,13 @@ $total_booking = ceil($total_kamar_tersedia * 0.1);
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <style>
-        /* --- TEMA MODERN LIGHT --- */
+       
         :root {
-            --primary: #0ea5e9;          /* Biru Muda */
-            --accent: #f97316;           /* Oranye */
-            --bg-body: #f8fafc;          /* Abu Terang */
-            --surface: #ffffff;          /* Putih */
-            --text-main: #1e293b;        /* Hitam Abu */
+            --primary: #0ea5e9;         
+            --accent: #f97316;         
+            --bg-body: #f8fafc;          
+            --surface: #ffffff;          
+            --text-main: #1e293b;       
             --text-muted: #64748b;       
             --border-light: #e2e8f0;
         }
@@ -79,12 +78,12 @@ $total_booking = ceil($total_kamar_tersedia * 0.1);
 
         h1, h2, h3, h4 { font-family: 'Outfit', sans-serif; }
 
-        /* HEADER GRADIENT */
+     
         .admin-header {
             background: linear-gradient(135deg, #0f172a 0%, #334155 100%);
             padding: 60px 0 100px 0;
             color: white;
-            margin-bottom: -60px; /* Overlap */
+            margin-bottom: -60px; 
         }
         .btn-back-header {
             background: rgba(255,255,255,0.1);
@@ -94,7 +93,7 @@ $total_booking = ceil($total_kamar_tersedia * 0.1);
         }
         .btn-back-header:hover { background: white; color: var(--primary); }
 
-        /* STAT CARD */
+     
         .stat-card {
             background: var(--surface);
             border-radius: 20px;
@@ -124,7 +123,7 @@ $total_booking = ceil($total_kamar_tersedia * 0.1);
         .stat-value { font-size: 2rem; font-weight: 800; line-height: 1; margin-bottom: 5px; color: #0f172a; }
         .stat-label { color: var(--text-muted); font-size: 0.9rem; font-weight: 500; }
 
-        /* FILTER SECTION */
+       
         .filter-box {
             background: var(--surface);
             border-radius: 20px;
@@ -151,7 +150,7 @@ $total_booking = ceil($total_kamar_tersedia * 0.1);
         <div class="d-flex justify-content-between align-items-center">
             <div>
                 <h2 class="fw-bold mb-1">Laporan & Statistik</h2>
-                <p class="mb-0 opacity-75">Ringkasan data hotel, kamar, dan transaksi.</p>
+                <p class="mb-0 opacity-75">Data real-time hotel, kamar, dan pendapatan.</p>
             </div>
             <a href="../main.php" class="btn-back-header">
                 <i class="bi bi-arrow-left me-2"></i> Dashboard
@@ -190,7 +189,7 @@ $total_booking = ceil($total_kamar_tersedia * 0.1);
     <div class="row justify-content-center mb-4">
         <div class="col-lg-10">
             <h4 class="fw-bold text-dark border-start border-4 border-warning ps-3">
-                Statistik: <?= $judul_filter ?>
+                Laporan: <?= $judul_filter ?>
             </h4>
         </div>
     </div>
@@ -214,7 +213,7 @@ $total_booking = ceil($total_kamar_tersedia * 0.1);
                         <div class="stat-icon icon-orange"><i class="bi bi-door-open"></i></div>
                         <div>
                             <div class="stat-value"><?= number_format($total_kamar_tersedia) ?></div>
-                            <div class="stat-label">Kamar Tersedia</div>
+                            <div class="stat-label">Stok Kamar</div>
                         </div>
                     </div>
                 </div>
@@ -223,7 +222,7 @@ $total_booking = ceil($total_kamar_tersedia * 0.1);
                     <div class="stat-card">
                         <div class="stat-icon icon-purple"><i class="bi bi-bookmark-check"></i></div>
                         <div>
-                            <div class="stat-value"><?= number_format($total_booking) ?></div>
+                            <div class="stat-value"><?= number_format($total_booking_real) ?></div>
                             <div class="stat-label">Total Pesanan</div>
                         </div>
                     </div>
@@ -231,24 +230,16 @@ $total_booking = ceil($total_kamar_tersedia * 0.1);
 
                 <div class="col-md-6 col-lg-3">
                     <div class="stat-card">
-                        <div class="stat-icon icon-green"><i class="bi bi-cash-coin"></i></div>
+                        <div class="stat-icon icon-green"><i class="bi bi-cash-stack"></i></div>
                         <div>
-                            <div class="stat-value" style="font-size: 1.2rem;">Rp <?= number_format($potensi_pendapatan / 1000000, 1) ?>M</div>
-                            <div class="stat-label">Potensi Aset</div>
+                            <div class="stat-value" style="font-size: 1.4rem;">
+                                Rp <?= number_format($total_pendapatan_real, 0, ',', '.') ?>
+                            </div>
+                            <div class="stat-label">Pendapatan Masuk</div>
                         </div>
                     </div>
                 </div>
 
-            </div>
-        </div>
-    </div>
-
-    <div class="row justify-content-center">
-        <div class="col-lg-10">
-            <div class="stat-card flex-column align-items-center text-center py-5">
-                <i class="bi bi-bar-chart-line display-1 text-muted opacity-25 mb-3"></i>
-                <h5 class="text-muted">Grafik Pendapatan Bulanan</h5>
-                <p class="small text-muted">Data grafik akan muncul setelah ada transaksi real-time.</p>
             </div>
         </div>
     </div>

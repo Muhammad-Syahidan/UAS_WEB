@@ -19,7 +19,8 @@ $result = $stmt->get_result();
 
 if ($result->num_rows > 0) {
     $row = $result->fetch_assoc();
-    $avatar = htmlspecialchars($row["avatar"] ?? 'default.png'); 
+    // Gunakan isset agar tidak error jika kolom avatar belum dibuat di database
+    $avatar = isset($row["avatar"]) ? htmlspecialchars($row["avatar"]) : 'default.png';
     $user   = htmlspecialchars($row["username"]);
     $auth   = htmlspecialchars($row["auth"]);
 } else {
@@ -63,35 +64,13 @@ $rec_result = $conn->query($rec_query);
     <link rel="stylesheet" href="css/main.css?v=<?= time(); ?>">
 
     <style>
-        /* CSS KHUSUS TOMBOL FORM */
-        .btn-form-action {
-            background: none;
-            color: inherit;
-            border: none;
-            padding: 0;
-            font: inherit;
-            cursor: pointer;
-            outline: inherit;
-            width: 100%;
-        }
-        
         .btn-lihat-kamar {
-            display: block;
-            width: 100%;
-            padding: 6px 12px;
-            font-size: 0.875rem;
-            font-weight: 600;
-            text-align: center;
-            color: #ffffff;
-            background-color: #f97316;
-            border: 1px solid white;
-            border-radius: 50px;
-            transition: all 0.3s;
+            display: block; width: 100%; padding: 6px 12px;
+            font-size: 0.875rem; font-weight: 600; text-align: center;
+            color: #ffffff; background-color: #f97316;
+            border: 1px solid white; border-radius: 50px; transition: all 0.3s;
         }
-        .btn-lihat-kamar:hover {
-            background-color: #ea580c;
-            color: #ffffffff;
-        }
+        .btn-lihat-kamar:hover { background-color: #ea580c; color: #ffffffff; }
     </style>
 </head>
 <body>
@@ -152,9 +131,6 @@ $rec_result = $conn->query($rec_query);
                     <li class="nav-item">
                         <a class="nav-link" href="user/my_bookings.php"><i class="bi bi-ticket-perforated"></i> Pesanan Saya</a>
                     </li>
-                    <li class="nav-item">
-                        <a class="nav-link" href="user/favorites.php"><i class="bi bi-heart"></i> Favorit</a>
-                    </li>
                 <?php endif; ?>
             </ul>
 
@@ -169,7 +145,6 @@ $rec_result = $conn->query($rec_query);
                     </a>
                     <ul class="dropdown-menu dropdown-menu-end bg-dark border-secondary shadow mt-2">
                         <li><span class="dropdown-header">Halo, <?= $user ?></span></li>
-                        <li><a class="dropdown-item text-light" href="main.php?p=profil"><i class="bi bi-person me-2"></i> Profil Saya</a></li>
                         <li><hr class="dropdown-divider bg-secondary"></li>
                         <li><a class="dropdown-item text-danger" href="logout.php"><i class="bi bi-box-arrow-right me-2"></i> Logout</a></li>
                     </ul>
@@ -223,13 +198,10 @@ $rec_result = $conn->query($rec_query);
     </div>
 
     <div class="scroll-container-wrapper">
-        
         <button class="scroll-btn btn-prev" id="scrollLeftBtn"><i class="bi bi-chevron-left"></i></button>
-
         <div class="horizontal-scroll" id="scrollContainer">
             <?php if ($rec_result && $rec_result->num_rows > 0): ?>
                 <?php while($hotel = $rec_result->fetch_assoc()): ?>
-                
                 <?php 
                     $db_foto = $hotel['foto_utama'];
                     if (empty($db_foto)) {
@@ -240,30 +212,23 @@ $rec_result = $conn->query($rec_query);
                         $foto = "img/" . $db_foto;
                     }
                 ?>
-
                 <div class="horizontal-item">
                     <div class="rec-card position-relative">
                         <img src="<?= $foto ?>" class="rec-img" alt="Hotel">
-                        
                         <span class="badge-loc">
                             <i class="bi bi-geo-alt-fill text-warning me-1"></i> <?= $hotel['provinsi'] ?>
                         </span>
-
                         <div class="p-3 d-flex flex-column h-100">
                             <h6 class="fw-bold text-dark mb-1 text-truncate" title="<?= $hotel['nama_hotel'] ?>"><?= $hotel['nama_hotel'] ?></h6>
                             <p class="text-warning small mb-3 text-truncate">
                                 <?= $hotel['kota'] ?>
                             </p>
-                            
                             <div class="mt-auto">
                                 <form action="hotel/rooms.php" method="POST">
                                     <input type="hidden" name="id_hotel" value="<?= $hotel['id_hotel'] ?>">
-                                    <button type="submit" class="btn-lihat-kamar">
-                                        Lihat Kamar
-                                    </button>
+                                    <button type="submit" class="btn-lihat-kamar">Lihat Kamar</button>
                                 </form>
                             </div>
-
                         </div>
                     </div>
                 </div>
@@ -275,9 +240,7 @@ $rec_result = $conn->query($rec_query);
                 </div>
             <?php endif; ?>
         </div>
-
         <button class="scroll-btn btn-next" id="scrollRightBtn"><i class="bi bi-chevron-right"></i></button>
-
     </div>
 </div>
 

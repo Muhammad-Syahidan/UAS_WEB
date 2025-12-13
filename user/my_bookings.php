@@ -1,9 +1,6 @@
 <?php
 session_start();
-// Aktifkan error reporting sementara untuk debugging jika masih blank
-// error_reporting(E_ALL); ini_set('display_errors', 1); 
-error_reporting(0); // Matikan jika sudah fix
-
+error_reporting(0); 
 include "../assets/koneksi.php";
 
 // 1. CEK LOGIN
@@ -14,8 +11,7 @@ if (!isset($_SESSION["iduser"]) || $_SESSION['auth'] != 'Pengguna') {
 
 $iduser = $_SESSION["iduser"];
 
-// 2. AMBIL DATA PESANAN (QUERY FIXED)
-// Perbaikan: Menghapus 'rt.nama_kamar' yang menyebabkan crash
+// 2. AMBIL DATA PESANAN
 $query = "
     SELECT b.*, rt.tipe_kamar, hl.nama_hotel, hl.foto_utama, hl.kota
     FROM bookings b
@@ -26,11 +22,6 @@ $query = "
 ";
 
 $stmt = $conn->prepare($query);
-if (!$stmt) {
-    // Tampilkan error jika query gagal
-    die("Error Database: " . $conn->error);
-}
-
 $stmt->bind_param("i", $iduser);
 $stmt->execute();
 $result = $stmt->get_result();
@@ -52,7 +43,6 @@ $result = $stmt->get_result();
     <style>
         body { background-color: #f8fafc; font-family: 'Plus Jakarta Sans', sans-serif; }
         
-        /* Navbar Style */
         .text-accent-orange { color: #f97316 !important; }
         .navbar { background: white; box-shadow: 0 4px 20px rgba(0,0,0,0.03); padding: 15px 0; }
 
@@ -66,15 +56,13 @@ $result = $stmt->get_result();
 
         .item-img { height: 180px; width: 100%; object-fit: cover; }
         
-        /* Badge Status */
         .badge-status {
             position: absolute; top: 15px; left: 15px;
             padding: 6px 14px; border-radius: 50px; font-size: 0.75rem; font-weight: 700;
             text-transform: uppercase; letter-spacing: 0.5px;
             box-shadow: 0 2px 10px rgba(0,0,0,0.1);
         }
-        .status-success { background: #dcfce7; color: #166534; } /* Hijau */
-        .status-pending { background: #ffedd5; color: #9a3412; } /* Oranye */
+        .status-success { background: #dcfce7; color: #166534; } 
         
         .info-box { padding: 20px; flex-grow: 1; display: flex; flex-direction: column; }
 
@@ -121,17 +109,14 @@ $result = $stmt->get_result();
         <?php if ($result->num_rows > 0): ?>
             <?php while($row = $result->fetch_assoc()): ?>
                 <?php 
-                    // Logika Status Sederhana (Bisa disesuaikan jika ada kolom status di DB)
                     $status = 'Lunas'; 
                     $badge_class = 'status-success';
 
-                    // Logika Gambar
                     $foto = $row['foto_utama'];
                     if (empty($foto)) $src = "https://via.placeholder.com/400x250?text=Hotel";
                     elseif (strpos($foto, 'http') === 0) $src = $foto;
                     else $src = "../img/" . $foto;
                     
-                    // Format Tanggal
                     $ci = date('d M Y', strtotime($row['tgl_checkin']));
                     $co = date('d M Y', strtotime($row['tgl_checkout']));
                 ?>
@@ -168,7 +153,8 @@ $result = $stmt->get_result();
                                     <small class="text-muted d-block" style="font-size: 0.7rem; font-weight:600;">TOTAL BAYAR</small>
                                     <div class="price-total">Rp <?= number_format($row['total_harga'], 0, ',', '.') ?></div>
                                 </div>
-                                <a href="#" class="btn-etiket">
+                                
+                                <a href="etiket.php?id=<?= $row['id_booking'] ?>" class="btn-etiket" target="_blank">
                                     <i class="bi bi-ticket-perforated me-1"></i> E-Tiket
                                 </a>
                             </div>

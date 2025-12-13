@@ -22,7 +22,7 @@
             <div class="landing-overlay">
                 <div class="d-flex justify-content-between align-items-center">
                     <div class="brand-logo">HOTEL<span style="color:var(--primary)">ID</span>.</div>
-                    <div class="d-none d-md-block text-white-50 small">Premium Hospitality System</div>
+                    <div class="d-none d-md-block text-white-50 small">Premium hotel System</div>
                 </div>
 
                 <div style="max-width: 600px;">
@@ -64,9 +64,8 @@
                     <div class="mb-3 text-start">
                         <label class="small text-white-50 mb-1">LOGIN AS</label>
                         <select name="auth" class="select-modern">
-                            <option value="Pengguna">User / Guest</option>
+                            <option value="Pengguna">User</option>
                             <option value="Administrator">Administrator</option>
-                            <option value="Resepsionis">Receptionist</option>
                         </select>
                     </div>
 
