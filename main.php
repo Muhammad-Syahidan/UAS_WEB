@@ -2,11 +2,8 @@
 session_start();
 include "assets/koneksi.php";
 
-// ==========================================
-// 1. CEK LOGIN
-// ==========================================
 if (!isset($_SESSION["iduser"])) {
-    // PERBAIKAN: Redirect ke index.php, bukan login.php
+   
     header("Location: index.php");
     exit();
 }
