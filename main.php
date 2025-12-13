@@ -6,7 +6,8 @@ include "assets/koneksi.php";
 // 1. CEK LOGIN
 // ==========================================
 if (!isset($_SESSION["iduser"])) {
-    header("Location: login.php");
+    // PERBAIKAN: Redirect ke index.php, bukan login.php
+    header("Location: index.php");
     exit();
 }
 $iduser = $_SESSION["iduser"];
@@ -25,7 +26,8 @@ if ($result->num_rows > 0) {
     $auth   = htmlspecialchars($row["auth"]);
 } else {
     session_destroy();
-    header("Location: login.php");
+    // PERBAIKAN: Redirect ke index.php
+    header("Location: index.php");
     exit();
 }
 
@@ -130,6 +132,9 @@ $rec_result = $conn->query($rec_query);
                 <?php if($auth == 'Pengguna' || $auth == 'User'): ?>
                     <li class="nav-item">
                         <a class="nav-link" href="user/my_bookings.php"><i class="bi bi-ticket-perforated"></i> Pesanan Saya</a>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" href="user/favorites.php"><i class="bi bi-heart"></i> Favorit</a>
                     </li>
                 <?php endif; ?>
             </ul>
