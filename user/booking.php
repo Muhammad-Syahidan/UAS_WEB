@@ -2,25 +2,23 @@
 session_start();
 include "../assets/koneksi.php";
 
-// 1. CEK LOGIN
 if (!isset($_SESSION["iduser"]) || $_SESSION['auth'] != 'Pengguna') {
     echo "<script>alert('Silakan login sebagai pengguna!'); window.location='../index.php';</script>";
     exit();
 }
 
-// 2. TANGKAP DATA (WAJIB POST)
 if ($_SERVER['REQUEST_METHOD'] !== 'POST') {
     header("Location: ../main.php");
     exit();
 }
 
 $id_room  = $_POST['id_room_type'] ?? null;
-// Validasi Tanggal
+
 $today    = date('Y-m-d');
 $checkin  = $_POST['ci'] ?? $today;
 $checkout = $_POST['co'] ?? date('Y-m-d', strtotime('+1 day'));
 
-// Cegah tanggal mundur
+
 if ($checkin < $today) $checkin = $today;
 if ($checkout <= $checkin) $checkout = date('Y-m-d', strtotime($checkin . ' +1 day'));
 
@@ -62,7 +60,6 @@ $total_bayar = $kamar['harga'] * $durasi;
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.11.3/font/bootstrap-icons.min.css">
     
     <style>
-        /* TEMA KONSISTEN MAIN.PHP */
         :root {
             --primary: #0ea5e9; 
             --primary-dark: #0284c7;
